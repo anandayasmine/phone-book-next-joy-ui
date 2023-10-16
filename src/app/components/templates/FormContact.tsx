@@ -11,10 +11,11 @@ import {
   IconButton,
   Card,
 } from '@mui/joy'
-import { InfoOutlined, CloseRounded, Close } from '@mui/icons-material';
+import { InfoOutlined, CloseRounded, Close, Star } from '@mui/icons-material';
 import { Formik } from 'formik';
 import { locale } from '@/app/data/head';
 import { alertDetail } from '@/app/utils/Style'
+import { TempData } from '@/app/data/local';
 
 
 type Props = {
@@ -27,7 +28,13 @@ type Props = {
 
 type State = {
   alert: any
+  favs: Array<any>
   fieldMultiple: any
+}
+
+type TEvent = {
+  type: string
+  value: any
 }
 
 export default class FormContact extends Component<Props, State> {
@@ -36,11 +43,50 @@ export default class FormContact extends Component<Props, State> {
 
   state = {
     fieldMultiple: {},
+    favs: [],
     alert: {
       open: false,
       type: 'danger',
       message: 'Error'
     }
+  }
+
+  handleEvent(params: TEvent) {
+
+    switch (params?.type) {
+
+      case 'fav-button': {
+
+        let newFavs = [...this.state.favs]
+
+        if (newFavs.find(fav => fav == params?.value)) {
+
+          newFavs = newFavs.filter(fav => fav != params?.value)
+
+        }
+        else {
+
+          newFavs.push(params?.value)
+
+        }
+
+        newFavs = _.uniq(newFavs)
+
+        TempData.setData({
+          name: 'fav-contact',
+          data: newFavs,
+          type: 'local'
+        })
+
+        this.setState({
+          favs: newFavs
+        })
+
+      } break
+
+    }
+
+
   }
 
   async handleSubmit() {
@@ -75,6 +121,14 @@ export default class FormContact extends Component<Props, State> {
 
 
   componentDidMount(): void {
+
+    const favs = TempData.getData('fav-contact', false, 'local')
+    console.log("🚀 ~ file: ContactLists.tsx ~ line 116 ~ ContactLists ~ componentDidMount ~ favs", favs)
+
+    this.setState({
+      favs: favs || []
+    })
+
   }
 
   componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void {
@@ -90,11 +144,13 @@ export default class FormContact extends Component<Props, State> {
       state: {
         alert,
         fieldMultiple,
+        favs,
       },
       props: {
         head,
         title,
         initialValues,
+        id
       }
     } = this
     console.log("🚀 ~ file: FormContact.tsx ~ line 216 ~ FormContact ~ render ~ this", this)
@@ -102,7 +158,40 @@ export default class FormContact extends Component<Props, State> {
     const forms = Object.keys(head?.forms || {})
 
     return (
-      <MainLayout title={title} back={head?.back}>
+      <MainLayout
+        title={title}
+        back={head?.back}
+        endHeader={
+          id &&
+          <IconButton aria-label="Favorite" size="sm"
+            onClick={this.handleEvent.bind(this, {
+              type: 'fav-button',
+              value: id,
+            })}
+
+            aria-pressed={favs.find((fav) => fav == id) ? 'true' : 'false'}
+
+            css={(theme) => {
+              return {
+                'svg': {
+                  color: 'var(--joy-palette-neutral-300, #CDD7E1)',
+                },
+
+                [`&[aria-pressed="true"]`]: {
+                  ...theme.variants.soft.warning,
+                  backgroundColor: 'unset',
+                  'svg': {
+                    color: '#EA9A3E',
+                  },
+                },
+              }
+            }}
+
+          >
+            <Star />
+          </IconButton>
+        }
+      >
 
         <Alert
           className={'animate__animated animate__faster ' + (alert?.open ? 'animate__fadeIn' : 'animate__fadeOut hide')}

@@ -24,6 +24,7 @@ import _ from 'lodash';
 import { filterDataByKeyword } from '@/app/utils/Helpers'
 import Style from '@/app/utils/Style'
 import Router from 'next/router';
+import { TempData } from '@/app/data/local';
 
 
 function SkeletonListProfile(props) {
@@ -49,13 +50,13 @@ function SkeletonListProfile(props) {
 type TProps = {
   title?: string
   head?: any
-  data?: Array
+  data?: Array<any>
 };
 
 type TState = {
   mainClassName: string
   searchValue: string
-  favs: Array
+  favs: Array<any>
 };
 
 type TEvent = {
@@ -92,6 +93,12 @@ export default class ContactLists extends Component<TProps, TState> {
 
         newFavs = _.uniq(newFavs)
 
+        TempData.setData({
+          name: 'fav-contact',
+          data: newFavs,
+          type: 'local'
+        })
+
         this.setState({
           favs: newFavs
         })
@@ -100,6 +107,17 @@ export default class ContactLists extends Component<TProps, TState> {
 
     }
 
+
+  }
+
+  componentDidMount(): void {
+
+    const favs = TempData.getData('fav-contact', false, 'local')
+    console.log("🚀 ~ file: ContactLists.tsx ~ line 116 ~ ContactLists ~ componentDidMount ~ favs", favs)
+
+    this.setState({
+      favs: favs || []
+    })
 
   }
 
@@ -117,13 +135,15 @@ export default class ContactLists extends Component<TProps, TState> {
       }
     } = this
 
+    console.log("🚀 ~ file: ContactLists.tsx ~ line 126 ~ ContactLists ~ render ~ this", this)
+
     const isDataReady = data?.length > 0
 
     return (
       <MainLayout title={title}
         endHeader={
           <IconButton
-            onClick={()=>Router.push('/form-contact')}
+            onClick={() => Router.push('/form-contact')}
           >
             <AddCircleOutlined
               css={{
@@ -132,135 +152,136 @@ export default class ContactLists extends Component<TProps, TState> {
             />
           </IconButton>
         }
-        
+
       >
-  <Card className='animate__animated animate__fadeIn animate__faster'>
+        <Card className='animate__animated animate__fadeIn animate__faster'>
 
-    <Stack>
-      <Input placeholder="Search in here…" onChange={(event) => {
-        this.setState({
-          searchValue: event?.target.value
-        })
-      }} />
-    </Stack>
+          <Stack>
+            <Input placeholder="Search in here…" onChange={(event) => {
+              this.setState({
+                searchValue: event?.target.value
+              })
+            }} />
+          </Stack>
 
-    <List
-      sx={{
-        '--ListItemDecorator-size': '56px',
-        '--List-gap': '0.5rem'
-      }}
+          <List
+            sx={{
+              '--ListItemDecorator-size': '56px',
+              '--List-gap': '0.5rem'
+            }}
 
-    >
+          >
 
-      {
-        isDataReady ?
-          filterDataByKeyword(data, searchValue, 'first_name')?.map((item: any, index: number) => {
-            return (
-              <ListItem key={'contact-' + index}
-                className='animate__animated animate__fadeInUp'
-                css={{
-                  animationDuration: (((index > 4 ? 8 : index) + 4) / 5) + 's !important'
-                }}
-                endAction={
-                  <IconButton aria-label="Favorite" size="sm"
-                    onClick={this.handleEvent.bind(this, {
-                      type: 'fav-button',
-                      value: item,
-                    })}
+            {
+              isDataReady ?
+                _.sortBy(filterDataByKeyword(data, searchValue, 'first_name'), i => !favs.includes(i.id))
+                  .map((item: any, index: number) => {
+                    return (
+                      <ListItem key={'contact-' + index}
+                        className='animate__animated animate__fadeInUp'
+                        css={{
+                          animationDuration: (((index > 4 ? 8 : index) + 4) / 5) + 's !important'
+                        }}
+                        endAction={
+                          <IconButton aria-label="Favorite" size="sm"
+                            onClick={this.handleEvent.bind(this, {
+                              type: 'fav-button',
+                              value: item,
+                            })}
 
-                    aria-pressed={favs.find((fav) => fav == item.id) ? 'true' : 'false'}
+                            aria-pressed={favs.find((fav) => fav == item.id) ? 'true' : 'false'}
 
-                    css={(theme) => {
-                      return {
-                        'svg': {
-                          color: 'var(--joy-palette-neutral-300, #CDD7E1)',
-                        },
+                            css={(theme) => {
+                              return {
+                                'svg': {
+                                  color: 'var(--joy-palette-neutral-300, #CDD7E1)',
+                                },
 
-                        [`&[aria-pressed="true"]`]: {
-                          ...theme.variants.soft.warning,
-                          'svg': {
-                            color: '#EA9A3E',
-                          },
-                        },
-                      }
-                    }}
-
-                  >
-                    <Star css={{
-                    }} />
-                  </IconButton>
-                }
-              >
-                <ListItemButton
-                  onClick={() => Router.push('/form-contact/' + item.id)}
-                >
-                  <ListItemDecorator>
-                    <Avatar alt={item?.first_name?.toUpperCase()} />
-                  </ListItemDecorator>
-                  <ListItemContent>
-                    <Typography
-                      level="title-sm"
-                      css={{
-                        fontWeight: 700,
-                      }}
-                      noWrap
-                    >
-                      {item?.first_name + ' ' + item?.last_name}
-                    </Typography>
-                    {
-                      item?.phones?.length > 0 &&
-                      <Stack direction={'row'} spacing={1}>
-                        <Typography level="body-xs" noWrap
-                          textColor={'neutral.400'}
-                        >
-                          {item?.phones[0].number}
-                        </Typography>
-                        {
-                          item?.phones?.length > 1 &&
-                          <Chip
-                            startDecorator={
-                              <Add css={{
-                                fontSize: '0.7rem',
-                                color: '#9FA6AD'
-                              }}
-                              />}
-                            css={{
-                              color: 'var(--color-primary)',
-                              fontWeight: 700,
-                              transform: 'scale(0.8)',
-                              backgroundColor: 'var(--joy-palette-neutral-100, #F0F4F8)',
+                                [`&[aria-pressed="true"]`]: {
+                                  ...theme.variants.soft.warning,
+                                  'svg': {
+                                    color: '#EA9A3E',
+                                  },
+                                },
+                              }
                             }}
+
                           >
-                            <Typography level="body-xs" noWrap
-                              css={{
-                                // color: 'var(--joy-palette-neutral-500, #636B74)',
-                                fontWeight: 500,
-                              }}
-                              textColor='neutral.400'
-
-                            >
-                              {item?.phones?.length - 1}
-                            </Typography>
-                          </Chip>
+                            <Star css={{
+                            }} />
+                          </IconButton>
                         }
-                      </Stack>
-                    }
-                  </ListItemContent>
-                </ListItemButton>
+                      >
+                        <ListItemButton
+                          onClick={() => Router.push('/form-contact/' + item.id)}
+                        >
+                          <ListItemDecorator>
+                            <Avatar alt={item?.first_name?.toUpperCase()} />
+                          </ListItemDecorator>
+                          <ListItemContent>
+                            <Typography
+                              level="title-sm"
+                              css={{
+                                fontWeight: 700,
+                              }}
+                              noWrap
+                            >
+                              {item?.first_name + ' ' + item?.last_name}
+                            </Typography>
+                            {
+                              item?.phones?.length > 0 &&
+                              <Stack direction={'row'} spacing={1}>
+                                <Typography level="body-xs" noWrap
+                                  textColor={'neutral.400'}
+                                >
+                                  {item?.phones[0].number}
+                                </Typography>
+                                {
+                                  item?.phones?.length > 1 &&
+                                  <Chip
+                                    startDecorator={
+                                      <Add css={{
+                                        fontSize: '0.7rem',
+                                        color: '#9FA6AD'
+                                      }}
+                                      />}
+                                    css={{
+                                      color: 'var(--color-primary)',
+                                      fontWeight: 700,
+                                      transform: 'scale(0.8)',
+                                      backgroundColor: 'var(--joy-palette-neutral-100, #F0F4F8)',
+                                    }}
+                                  >
+                                    <Typography level="body-xs" noWrap
+                                      css={{
+                                        // color: 'var(--joy-palette-neutral-500, #636B74)',
+                                        fontWeight: 500,
+                                      }}
+                                      textColor='neutral.400'
 
-              </ListItem>
+                                    >
+                                      {item?.phones?.length - 1}
+                                    </Typography>
+                                  </Chip>
+                                }
+                              </Stack>
+                            }
+                          </ListItemContent>
+                        </ListItemButton>
 
-            )
-          })
-          :
-          <SkeletonListProfile
-            row={15}
-          />
-      }
+                      </ListItem>
 
-    </List>
+                    )
+                  })
+                :
+                <SkeletonListProfile
+                  row={15}
+                />
+            }
 
-  </Card>
+          </List>
+
+        </Card>
       </MainLayout >
     )
   }

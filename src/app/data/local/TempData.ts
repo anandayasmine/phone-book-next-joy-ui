@@ -37,11 +37,20 @@ const main = {
 
   },
 
-  getDataMain: () => {
+  getDataMain: (type: string) => {
 
     try {
 
-      return JSON.parse(sessionStorage.getItem(main.dataName))
+      if(type == 'session'){
+        
+        return JSON.parse(sessionStorage.getItem(main.dataName))
+
+      }
+      else if(type == 'local'){
+
+        return JSON.parse(localStorage.getItem(main.dataName))
+
+      }
 
     }
     catch (err) {
@@ -53,13 +62,13 @@ const main = {
 
   },
 
-  getData: (name: string | number, isFullData: any) => {
+  getData: (name: string | number, isFullData: any, type: string = 'session') => {
 
     try {
 
       if (name) {
 
-        const dataMain = main.getDataMain()
+        const dataMain = main.getDataMain(type)
 
         if (dataMain) {
 
@@ -112,9 +121,19 @@ const main = {
             asPath: params?.asPath || router.asPath,
             type: type
           },
+        } 
+
+        if(type == 'session'){
+
+          sessionStorage.setItem(main.dataName, JSON.stringify(refactorJSON))
+
+        }
+        else if(type == 'local'){
+          
+          localStorage.setItem(main.dataName, JSON.stringify(refactorJSON))
+
         }
 
-        sessionStorage.setItem(main.dataName, JSON.stringify(refactorJSON))
 
       }
 

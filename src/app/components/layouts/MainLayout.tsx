@@ -32,12 +32,14 @@ export default class MainLayout extends Component<Props, State> {
       <Grid
         css={{
           padding: '1rem',
-          backgroundColor: '#fafafa',
+          backgroundColor: '#fbfcfe',
           minHeight: '100vh',
           [mq.sm]: {
             padding: '1rem',
             display: 'grid',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            backgroundColor: 'white',
+
           },
         }}
         spacing={1}
@@ -45,7 +47,12 @@ export default class MainLayout extends Component<Props, State> {
         <Stack
           css={{
             [mq.sm]: {
-              width: '400px'
+              width: '400px',
+              border: '1px solid #f8f5ff',
+              borderRadius: '1rem',
+              padding: '1rem',
+              backgroundColor: '#fbfcfe',
+              ...(Style.shadow)
             },
           }}
         >
